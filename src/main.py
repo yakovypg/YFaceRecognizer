@@ -6,32 +6,34 @@ import cv2 as cv
 from face_recognizer import FaceRecognizer
 from video_face_recognizer import VideoFaceRecognizer
 
+
 def _process_webcam_video(known_faces_path, shape_predictor_path):
     video_stream = cv.VideoCapture(0)
-        
+
     video_face_recognizer = VideoFaceRecognizer(shape_predictor_path, video_stream)
     video_face_recognizer.add_known_faces(known_faces_path)
-    
+
     _process_video(video_face_recognizer)
 
     video_face_recognizer.release_resources()
 
+
 def _process_images(images_paths, known_faces_path, shape_predictor_path, output_path=None):
     PROCESSED_IMAGE_MARK = "_recognized"
-    
+
     face_recognizer = FaceRecognizer(shape_predictor_path)
     face_recognizer.add_known_faces(known_faces_path)
 
     for image_path in images_paths:
         processed_image_path = output_path
-        
+
         if output_path is not None and os.path.isdir(output_path):
             image_name, image_extension = os.path.splitext(os.path.basename(image_path))
             processed_image_name = f"{image_name}{PROCESSED_IMAGE_MARK}{image_extension}"
             processed_image_path = os.path.join(output_path, processed_image_name)
-            
-        
+
         _process_image(face_recognizer, image_path, processed_image_path)
+
 
 def _process_video(video_face_recognizer):
     while True:
@@ -47,19 +49,21 @@ def _process_video(video_face_recognizer):
         if cv.waitKey(30) & 0xFF == ord('q'):
             break
 
+
 def _process_image(face_recognizer, image_path, output_path=None):
     if not os.path.isfile(image_path):
         raise RuntimeError(f"error: '{image_path}' is not file")
 
     image = cv.imread(image_path)
     image, _ = face_recognizer.add_face_info_to_frame(image)
-    
+
     if output_path is None:
         cv.imshow("image", image)
         cv.waitKey(0)
         cv.destroyAllWindows()
     else:
         cv.imwrite(output_path, image)
+
 
 def _verify_output_path(args):
     if (args.input is not None
@@ -69,23 +73,24 @@ def _verify_output_path(args):
         print("error: output path is not directory")
         exit(1)
 
+
 def _configure_parser():
     parser = argparse.ArgumentParser(
         prog="YFaceRecognizer",
         description="face recognition system")
-    
+
     parser.add_argument(
         "-m",
         "--model",
         required=True,
         help="path to the shape_predictor_68_face_landmarks.dat")
-    
+
     parser.add_argument(
         "-k",
         "--known-faces",
         required=True,
         help="path to the directory with faces that must be registered in the system")
-    
+
     parser.add_argument(
         "-i",
         "--input",
@@ -101,7 +106,8 @@ def _configure_parser():
 
     return parser
 
-if __name__ == "__main__":   
+
+if __name__ == "__main__":
     parser = _configure_parser()
     args = parser.parse_args()
 

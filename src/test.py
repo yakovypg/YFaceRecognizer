@@ -6,6 +6,7 @@ import cv2 as cv
 from pathlib import Path
 from face_recognizer import FaceRecognizer
 
+
 def _test(
         expected_person_name,
         known_faces_path,
@@ -37,13 +38,13 @@ def _test(
 
         if expected_person_name not in actual_names:
             errors.append(person_image_name)
-        
+
         processed_images_count += 1
         print(f"images processed: {processed_images_count} out of {images_count}")
 
     errors_count = len(errors)
     errors_percentage = "%.2f" % (errors_count / images_count * 100)
-    
+
     print()
     print(f"#images: {images_count}")
     print(f"#errors: {errors_count} ({errors_percentage}%)")
@@ -55,17 +56,18 @@ def _test(
         for i, name in zip(range(1, len(errors) + 1), errors):
             print(f"{i}. {name}")
 
+
 def _configure_parser():
     parser = argparse.ArgumentParser(
         prog="FaceRecognizerTest",
         description="script for testing FaceRecognizer")
-    
+
     parser.add_argument(
         "-m",
         "--model",
         required=True,
         help="path to the shape_predictor_68_face_landmarks.dat")
-    
+
     parser.add_argument(
         "-k",
         "--known-faces",
@@ -77,7 +79,7 @@ def _configure_parser():
         "--output",
         required=True,
         help="path to the directory where the results will be saved")
-    
+
     parser.add_argument(
         "-i",
         "--input",
@@ -92,8 +94,9 @@ def _configure_parser():
 
     return parser
 
+
 if __name__ == "__main__":
     parser = _configure_parser()
     args = parser.parse_args()
-    
+
     _test(args.name, args.known_faces, args.input, args.output, args.model)

@@ -6,12 +6,14 @@ import cv2 as cv
 import numpy as np
 import face_recognition as fr
 
+
 class _NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
 
         return super().default(obj)
+
 
 class FaceInfo(object):
     def __init__(self, name, encoding):

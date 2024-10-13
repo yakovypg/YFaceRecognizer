@@ -2,6 +2,7 @@ import argparse
 
 from face_info import FaceInfo
 
+
 def _configure_parser():
     parser = argparse.ArgumentParser(
         prog="CreateEncoding",
@@ -12,7 +13,7 @@ def _configure_parser():
         "--input",
         required=True,
         help="path to the input image")
-    
+
     parser.add_argument(
         "-o",
         "--output",
@@ -26,6 +27,7 @@ def _configure_parser():
         help="name of the person")
 
     return parser
+
 
 if __name__ == "__main__":
     parser = _configure_parser()
