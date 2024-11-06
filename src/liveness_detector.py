@@ -9,7 +9,7 @@ class LivenessDetector(object):
         self.model_path = model_path
         self.model_weights_path = model_weights_path
 
-    def is_face_spoof(self, face_image, min_probability = 0.6):
+    def is_face_spoof(self, face_image, min_probability=0.6):
         model_json = None
 
         with open(self.model_path, "r") as file:

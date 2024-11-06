@@ -108,7 +108,7 @@ class FaceRecognizer(object):
             name = previous_name
             is_face_known = name != self.unknown_face_name
             result = previous_result if previous_result is not None else FaceRecognizerResult.KNOWN
-            
+
             if previous_name is None:
                 name, is_face_known = self.get_face_name(face_encoding)
 
@@ -116,9 +116,9 @@ class FaceRecognizer(object):
                     result = FaceRecognizerResult.UNKNOWN
 
             if previous_result is not None:
-                if ((previous_result == FaceRecognizerResult.KNOWN_SPOOF
-                        or previous_result == FaceRecognizerResult.UNKNOWN_SPOOF)
-                            and not name.endswith(self.spoof_face_postfix)):
+                if ((previous_result == FaceRecognizerResult.KNOWN_SPOOF or
+                        previous_result == FaceRecognizerResult.UNKNOWN_SPOOF) and
+                        not name.endswith(self.spoof_face_postfix)):
                     name += self.spoof_face_postfix
             elif self.liveness_detector is not None:
                 face = frame[top:bottom, left:right]
