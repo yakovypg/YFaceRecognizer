@@ -86,7 +86,7 @@ class FaceRecognizer(object):
         self.known_face_names.append(face.name)
         self.known_face_encodings.append(face.encoding)
 
-    def add_face_info_to_frame(self, frame):
+    def add_face_info_to_frame(self, frame, previous_names=None, previous_results=None):
         frame_gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
 
@@ -96,15 +96,31 @@ class FaceRecognizer(object):
         names = []
         results = []
 
-        for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-            result = FaceRecognizerResult.KNOWN
+        if (previous_names is None
+                or previous_results is None
+                or len(previous_names) != len(face_locations)
+                or len(previous_results) != len(face_locations)):
+            previous_names = [None] * len(face_locations)
+            previous_results = [None] * len(face_locations)
 
-            name, is_face_known = self.get_face_name(face_encoding)
+        for (top, right, bottom, left), face_encoding, previous_name, previous_result in (
+                zip(face_locations, face_encodings, previous_names, previous_results)):
+            name = previous_name
+            is_face_known = name != self.unknown_face_name
+            result = previous_result if previous_result is not None else FaceRecognizerResult.KNOWN
+            
+            if previous_name is None:
+                name, is_face_known = self.get_face_name(face_encoding)
 
-            if not is_face_known:
-                result = FaceRecognizerResult.UNKNOWN
+                if not is_face_known:
+                    result = FaceRecognizerResult.UNKNOWN
 
-            if self.liveness_detector is not None:
+            if previous_result is not None:
+                if ((previous_result == FaceRecognizerResult.KNOWN_SPOOF
+                        or previous_result == FaceRecognizerResult.UNKNOWN_SPOOF)
+                            and not name.endswith(self.spoof_face_postfix)):
+                    name += self.spoof_face_postfix
+            elif self.liveness_detector is not None:
                 face = frame[top:bottom, left:right]
 
                 if (self.liveness_detector.is_face_spoof(face)):

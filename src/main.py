@@ -37,6 +37,11 @@ def _process_images(images_paths, known_faces_path, shape_predictor_path, output
 
 
 def _process_video(video_face_recognizer):
+    previous_names = None
+    previous_results = None
+
+    skipped_frames_count = 0
+
     while True:
         result, frame = video_face_recognizer.capture_video_frame()
 
@@ -44,7 +49,18 @@ def _process_video(video_face_recognizer):
             print("warning: cannot get frame from video stream")
             continue
 
-        frame, _, _ = video_face_recognizer.add_face_info_to_frame(frame)
+        frame, previous_names, previous_results = (
+            video_face_recognizer.add_face_info_to_frame(frame, previous_names, previous_results)
+        )
+
+        skipped_frames_count += 1
+
+        if skipped_frames_count == 50:
+            previous_names = None
+            previous_results = None
+            skipped_frames_count = 0
+            print('RESET')
+
         cv.imshow("video", frame)
 
         if cv.waitKey(30) & 0xFF == ord('q'):
