@@ -4,8 +4,8 @@ from face_recognizer import FaceRecognizer
 
 
 class VideoFaceRecognizer(FaceRecognizer):
-    def __init__(self, shape_predictor_path, video_stream):
-        super().__init__(shape_predictor_path)
+    def __init__(self, shape_predictor_path, video_stream, liveness_detector=None):
+        super().__init__(shape_predictor_path, liveness_detector)
         self.video_stream = video_stream
 
     def capture_video_frame(self):

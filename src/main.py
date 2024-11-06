@@ -5,12 +5,13 @@ import cv2 as cv
 
 from face_recognizer import FaceRecognizer
 from video_face_recognizer import VideoFaceRecognizer
+from liveness_detector import LivenessDetector
 
 
-def _process_webcam_video(known_faces_path, shape_predictor_path):
+def _process_webcam_video(known_faces_path, shape_predictor_path, liveness_detector=None):
     video_stream = cv.VideoCapture(0)
 
-    video_face_recognizer = VideoFaceRecognizer(shape_predictor_path, video_stream)
+    video_face_recognizer = VideoFaceRecognizer(shape_predictor_path, video_stream, liveness_detector)
     video_face_recognizer.add_known_faces(known_faces_path)
 
     _process_video(video_face_recognizer)
@@ -18,10 +19,10 @@ def _process_webcam_video(known_faces_path, shape_predictor_path):
     video_face_recognizer.release_resources()
 
 
-def _process_images(images_paths, known_faces_path, shape_predictor_path, output_path=None):
+def _process_images(images_paths, known_faces_path, shape_predictor_path, output_path=None, liveness_detector=None):
     PROCESSED_IMAGE_MARK = "_recognized"
 
-    face_recognizer = FaceRecognizer(shape_predictor_path)
+    face_recognizer = FaceRecognizer(shape_predictor_path, liveness_detector)
     face_recognizer.add_known_faces(known_faces_path)
 
     for image_path in images_paths:
@@ -74,6 +75,12 @@ def _verify_output_path(args):
         exit(1)
 
 
+def _verify_spoof_args(args):
+    if args.spoof_check is not None and (args.spoof_model is None or args.spoof_model_weights is None):
+        print("error: --spoof-check requires --spoof-model and --spoof-model-weights")
+        exit(1)
+
+
 def _configure_parser():
     parser = argparse.ArgumentParser(
         prog="YFaceRecognizer",
@@ -82,18 +89,40 @@ def _configure_parser():
     parser.add_argument(
         "-m",
         "--model",
+        type=str,
         required=True,
         help="path to the shape_predictor_68_face_landmarks.dat")
 
     parser.add_argument(
         "-k",
         "--known-faces",
+        type=str,
         required=True,
         help="path to the directory with faces that must be registered in the system")
 
     parser.add_argument(
+        "--spoof-check",
+        action="store_true",
+        default=False,
+        required=False,
+        help="checking a face for spoof")
+
+    parser.add_argument(
+        "--spoof-model",
+        type=str,
+        required=False,
+        help="path to the antispoofing_model.json")
+
+    parser.add_argument(
+        "--spoof-model-weights",
+        type=str,
+        required=False,
+        help="path to the antispoofing_model.h5")
+
+    parser.add_argument(
         "-i",
         "--input",
+        type=str,
         required=False,
         nargs="+",
         help="paths to the images in which faces must be recognized")
@@ -101,6 +130,7 @@ def _configure_parser():
     parser.add_argument(
         "-o",
         "--output",
+        type=str,
         required=False,
         help="path to the output image or directory where output images must be saved")
 
@@ -112,8 +142,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     _verify_output_path(args)
+    _verify_spoof_args(args)
+
+    liveness_detector = (
+        LivenessDetector(args.spoof_model, args.spoof_model_weights)
+        if args.spoof_check
+        else None
+    )
 
     if args.input is None:
-        _process_webcam_video(args.known_faces, args.model)
+        _process_webcam_video(args.known_faces, args.model, liveness_detector)
     else:
-        _process_images(args.input, args.known_faces, args.model, args.output)
+        _process_images(args.input, args.known_faces, args.model, args.output, liveness_detector)

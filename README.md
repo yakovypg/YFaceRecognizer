@@ -16,7 +16,7 @@
 
 ## Table of contents
 *    [Quick Start](#quick-start)
-     * [Download Model](#download-model)
+     * [Download Models](#download-models)
      * [Add Known Faces](#add-known-faces)
      * [Run Tool](#run-tool)
      * [Create Face Encoding](#create-face-encoding)
@@ -49,11 +49,16 @@ Follow these steps:
     ```
 - Open `src` folder and [run](#run-tool) `main.py`.
 
-### Download Model
-You can download `shape_predictor_68_face_landmarks.dat` [here](https://github.com/davisking/dlib-models) or anywhere else. To do this in one command, run the `download_model.sh` [script](download_model.sh).
+### Download Models
+The following models and weights need to be downloaded:
+1. `shape_predictor_68_face_landmarks.dat` (can be downloaded [here](https://github.com/davisking/dlib-models)).
+2. `antispoofing_model.json` (can be downloaded [here](https://github.com/prabhat-123/Face_Antispoofing_System/tree/main/antispoofing_models)).
+3. `antispoofing_model.h5` (can be downloaded [here](https://github.com/prabhat-123/Face_Antispoofing_System/tree/main/antispoofing_models)).
+
+You can download models and weights from the provided links or anywhere else. To do this in one command, run the `download_models.sh` [script](download_models.sh).
 
 ```
-./download_model.sh
+./download_models.sh
 ```
 
 ### Add Known Faces
@@ -66,6 +71,9 @@ You can download sample face dataset using the `download_faces.sh` [script](down
 ```
 
 ### Run Tool
+> **Note**
+> Don't close images or video stream with the cross. Instead, press the `q` key on your keyboard.
+
 You should specify path to the `shape_predictor_68_face_landmarks.dat` and path to the folder containing known faces. It is not necessary to specify the paths to the input files and the output path.
 
 If you don't specify the paths to the input files, the tool will read video stream from your webcam.
@@ -92,8 +100,11 @@ You can omit the output path. In this case, the output images will not be saved,
 python3 main.py -m /path/to/shape_predictor_68_face_landmarks.dat -k /path/to/folder_with_known_faces -i /path/to/input_image_1 /path/to/input_image_2
 ```
 
-> **Note**
-> Don't close images or videos with the cross. Instead, press the `q` key on your keyboard.
+You can enable anti-spoofing mode. To do this, specify the `--spoof-check` flag. You also should specify the path to the model `antispoofing_model.json` and path to its weights `antispoofing_model.h5`.
+
+```
+python3 main.py -m /path/to/shape_predictor_68_face_landmarks.dat -k /path/to/folder_with_known_faces --spoof-check --spoof-model /path/to/antispoofing_model.json --spoof-model-weights /path/to/antispoofing_model.h5
+```
 
 ### Create Face Encoding
 You can store known faces not only as an image, but also as a json object containing a name and an encoding (embedding). You can create this file using `create_encoding.py`.

@@ -10,9 +10,11 @@ from face_info import FaceInfo
 
 
 class FaceRecognizer(object):
-    def __init__(self, shape_predictor_path):
+    def __init__(self, shape_predictor_path, liveness_detector=None):
         self.face_detector = dl.get_frontal_face_detector()
         self.shape_predictor = dl.shape_predictor(shape_predictor_path)
+
+        self.liveness_detector = liveness_detector
 
         self.known_face_encodings = []
         self.known_face_names = []
@@ -75,12 +77,19 @@ class FaceRecognizer(object):
         frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
 
         face_locations = fr.face_locations(frame_rgb)
-        face_encoding = fr.face_encodings(frame_rgb, face_locations)
+        face_encodings = fr.face_encodings(frame_rgb, face_locations)
 
         names = []
 
-        for (top, right, bottom, left), face_encoding in zip(face_locations, face_encoding):
+        for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
             name = self.get_face_name(face_encoding)
+
+            if self.liveness_detector is not None:
+                face = frame[top:bottom, left:right]
+
+                if (self.liveness_detector.is_face_spoof(face)):
+                    name += " (spoof)"
+
             names.append(name)
 
             self.add_face_name_to_frame(frame, name, left, top)

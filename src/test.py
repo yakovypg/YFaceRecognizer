@@ -65,30 +65,35 @@ def _configure_parser():
     parser.add_argument(
         "-m",
         "--model",
+        type=str,
         required=True,
         help="path to the shape_predictor_68_face_landmarks.dat")
 
     parser.add_argument(
         "-k",
         "--known-faces",
+        type=str,
         required=True,
         help="path to the directory with faces that must be registered in the system")
 
     parser.add_argument(
         "-o",
         "--output",
+        type=str,
         required=True,
         help="path to the directory where the results will be saved")
 
     parser.add_argument(
         "-i",
         "--input",
+        type=str,
         required=True,
         help="path to the directory containing faces of one person that must be recognized")
 
     parser.add_argument(
         "-n",
         "--name",
+        type=str,
         required=True,
         help="expected name of the preson")
 
