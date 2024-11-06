@@ -5,8 +5,16 @@ import cv2 as cv
 import dlib as dl
 import face_recognition as fr
 
+from enum import Enum
 from pathlib import Path
 from face_info import FaceInfo
+
+
+class FaceRecognizerResult(Enum):
+    KNOWN = 1
+    KNOWN_SPOOF = 2
+    UNKNOWN = 3
+    UNKNOWN_SPOOF = 4
 
 
 class FaceRecognizer(object):
@@ -21,9 +29,15 @@ class FaceRecognizer(object):
 
         self.landmarks_count = 68
 
+        # BGR colors
         self.face_landmark_color = (255, 0, 0)
         self.face_rectangle_color = (0, 255, 0)
+        self.face_warning_rectangle_color = (0, 255, 255)
+        self.face_error_rectangle_color = (0, 0, 255)
         self.name_color = (255, 255, 255)
+
+        self.unknown_face_name = "Unknown"
+        self.spoof_face_postfix = " (spoof)"
 
     def add_known_faces(self, directory_path):
         if not os.path.isdir(directory_path):
@@ -80,23 +94,36 @@ class FaceRecognizer(object):
         face_encodings = fr.face_encodings(frame_rgb, face_locations)
 
         names = []
+        results = []
 
         for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-            name = self.get_face_name(face_encoding)
+            result = FaceRecognizerResult.KNOWN
+
+            name, is_face_known = self.get_face_name(face_encoding)
+
+            if not is_face_known:
+                result = FaceRecognizerResult.UNKNOWN
 
             if self.liveness_detector is not None:
                 face = frame[top:bottom, left:right]
 
                 if (self.liveness_detector.is_face_spoof(face)):
-                    name += " (spoof)"
+                    name += self.spoof_face_postfix
+
+                    result = (
+                        FaceRecognizerResult.KNOWN_SPOOF
+                        if result == FaceRecognizerResult.KNOWN
+                        else FaceRecognizerResult.UNKNOWN_SPOOF
+                    )
 
             names.append(name)
+            results.append(result)
 
             self.add_face_name_to_frame(frame, name, left, top)
-            self.add_face_rectangle_to_frame(frame, left, top, right, bottom)
+            self.add_face_rectangle_to_frame(frame, left, top, right, bottom, result)
             self.add_face_landmarks_to_frame(frame, frame_gray, left, top, right, bottom)
 
-        return (frame, names)
+        return (frame, names, results)
 
     def add_face_name_to_frame(self, frame, name, face_left, face_top):
         FONT_SCALE = 2e-3
@@ -127,14 +154,21 @@ class FaceRecognizer(object):
 
         cv.putText(frame, text, text_bottom_left, text_font, text_font_scale, text_color, text_thickness)
 
-    def add_face_rectangle_to_frame(self, frame, face_left, face_top, face_right, face_bottom):
+    def add_face_rectangle_to_frame(self, frame, face_left, face_top, face_right, face_bottom, result):
         THICKNESS_SCALE = 1e-3
 
         frame_height, frame_width, _ = frame.shape
 
+        rectangle_color_switch = {
+            FaceRecognizerResult.KNOWN: self.face_rectangle_color,
+            FaceRecognizerResult.KNOWN_SPOOF: self.face_warning_rectangle_color,
+            FaceRecognizerResult.UNKNOWN: self.face_error_rectangle_color,
+            FaceRecognizerResult.UNKNOWN_SPOOF: self.face_error_rectangle_color
+        }
+
         rectangle_start_point = (face_left, face_top)
         rectangle_end_point = (face_right, face_bottom)
-        rectangle_color = self.face_rectangle_color
+        rectangle_color = rectangle_color_switch.get(result)
         rectangle_thickness = math.ceil(min(frame_width, frame_height) * THICKNESS_SCALE)
 
         cv.rectangle(frame, rectangle_start_point, rectangle_end_point, rectangle_color, rectangle_thickness)
@@ -166,6 +200,6 @@ class FaceRecognizer(object):
 
         if True in matches:
             first_match_index = matches.index(True)
-            return self.known_face_names[first_match_index]
+            return self.known_face_names[first_match_index], True
 
-        return "Unknown"
+        return self.unknown_face_name, False

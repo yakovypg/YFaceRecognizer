@@ -28,7 +28,7 @@ def _test(
         person_image_path = os.path.join(person_images_directory_path, person_image_name)
 
         image = cv.imread(person_image_path)
-        image, actual_names = face_recognizer.add_face_info_to_frame(image)
+        image, actual_names, _ = face_recognizer.add_face_info_to_frame(image)
 
         result_directory_path = os.path.join(results_path, person_images_directory_name)
         result_image_path = os.path.join(result_directory_path, person_image_name)

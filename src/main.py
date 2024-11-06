@@ -44,7 +44,7 @@ def _process_video(video_face_recognizer):
             print("warning: cannot get frame from video stream")
             continue
 
-        frame, _ = video_face_recognizer.add_face_info_to_frame(frame)
+        frame, _, _ = video_face_recognizer.add_face_info_to_frame(frame)
         cv.imshow("video", frame)
 
         if cv.waitKey(30) & 0xFF == ord('q'):
@@ -56,7 +56,7 @@ def _process_image(face_recognizer, image_path, output_path=None):
         raise RuntimeError(f"error: '{image_path}' is not file")
 
     image = cv.imread(image_path)
-    image, _ = face_recognizer.add_face_info_to_frame(image)
+    image, _, _ = face_recognizer.add_face_info_to_frame(image)
 
     if output_path is None:
         cv.imshow("image", image)
