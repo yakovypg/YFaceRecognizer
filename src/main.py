@@ -37,6 +37,8 @@ def _process_images(images_paths, known_faces_path, shape_predictor_path, output
 
 
 def _process_video(video_face_recognizer):
+    FRAMES_TO_SKIP = 5
+
     previous_names = None
     previous_results = None
 
@@ -55,11 +57,10 @@ def _process_video(video_face_recognizer):
 
         skipped_frames_count += 1
 
-        if skipped_frames_count == 50:
+        if video_face_recognizer.liveness_detector is None or skipped_frames_count == FRAMES_TO_SKIP:
             previous_names = None
             previous_results = None
             skipped_frames_count = 0
-            print('RESET')
 
         cv.imshow("video", frame)
 
@@ -92,7 +93,7 @@ def _verify_output_path(args):
 
 
 def _verify_spoof_args(args):
-    if args.spoof_check is not None and (args.spoof_model is None or args.spoof_model_weights is None):
+    if args.spoof_check and (args.spoof_model is None or args.spoof_model_weights is None):
         print("error: --spoof-check requires --spoof-model and --spoof-model-weights")
         exit(1)
 
